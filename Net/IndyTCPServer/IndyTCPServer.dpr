@@ -2,7 +2,8 @@ program IndyTCPServer;
 
 uses
   Forms,
-  IndyTCPServerMainFormUnit in 'IndyTCPServerMainFormUnit.pas' {IndyTCPServerMainFormForm};
+  IndyTCPServerMainFormUnit in 'IndyTCPServerMainFormUnit.pas' {IndyTCPServerMainFormForm},
+  crc16ccittUnit in 'crc16ccittUnit.pas';
 
 {$R *.res}
 

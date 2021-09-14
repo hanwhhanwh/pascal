@@ -15,6 +15,7 @@ type
     pnlMenu: TPanel;
     btnStart: TButton;
     btnStop: TButton;
+    btnCrc16CCITT: TButton;
     procedure IdTCPServerConnect(AThread: TIdPeerThread);
     procedure IdTCPServerDisconnect(AThread: TIdPeerThread);
     procedure IdTCPServerExecute(AThread: TIdPeerThread);
@@ -23,13 +24,7 @@ type
     procedure btnStartClick(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure TCPServerAccept(Sender: TObject;
-      ClientSocket: TCustomIpClient);
-    procedure TCPServerCreateHandle(Sender: TObject);
-    procedure TCPServerDestroyHandle(Sender: TObject);
-    procedure TCPServerGetThread(Sender: TObject;
-      var ClientSocketThread: TClientSocketThread);
-    procedure TCPServerListening(Sender: TObject);
+    procedure btnCrc16CCITTClick(Sender: TObject);
   private
     procedure RecvData(ASender: TObject; pData: PByte; nRead: integer);
   public
@@ -63,7 +58,18 @@ var
 
 implementation
 
+uses crc16ccittUnit;
+
 {$R *.dfm}
+
+type
+	TMyPacket = packed record
+  	Head: Word;
+    CmdID: Word;
+    PacketLength: Word;
+    Payload: array[0..37] of byte;
+    Crc16: Word;
+  end;
 
 procedure TIndyTCPServerMainFormForm.FormCreate(Sender: TObject);
 begin
@@ -219,5 +225,30 @@ begin
 end;
 
 
+
+procedure TIndyTCPServerMainFormForm.btnCrc16CCITTClick(Sender: TObject);
+var
+	aPacket: TMyPacket;
+  wCrc16: Word;
+  strData: string;
+begin
+	mmoLog.Lines.Add('TMyPacket size = ' + IntToStr(SizeOf(TMyPacket)));
+  ZeroMemory(@aPacket, SizeOf(TMyPacket));
+  aPacket.Head := $4E48;
+  aPacket.CmdID := $3000;
+  aPacket.PacketLength := 38;
+  aPacket.Crc16 := crc16(PByte(@aPacket), SizeOf(TMyPacket), CCITT16_POLYNOMINAL, CCITT16_INITIAL);
+  wCrc16 := crc16(PByte(@aPacket), SizeOf(TMyPacket), CCITT16_POLYNOMINAL, CCITT16_INITIAL);
+	mmoLog.Lines.Add('  CRC16 [1] = ' + IntToHex(wCrc16, 4));
+//  wCrc16 := ComputeCRC16CCITT(CCITT16_INITIAL, PByte(@aPacket), SizeOf(TMyPacket));
+  wCrc16 := ComputeCRC16CCITT(CCITT16_POLYNOMINAL, PByte(@aPacket), SizeOf(TMyPacket));
+	mmoLog.Lines.Add('  CRC16 [2] = ' + IntToHex(wCrc16, 4));
+
+  strData := '123456789123456789123456789';
+  wCrc16 := crc16(PByte(@strData[1]), Length(strData), CCITT16_POLYNOMINAL, CCITT16_INITIAL);
+	mmoLog.Lines.Add('  CRC16 - 1 ["123456789123456789123456789"] = ' + IntToHex(wCrc16, 4));
+  wCrc16 := ComputeCRC16CCITT(CCITT16_POLYNOMINAL, PByte(@strData[1]), Length(strData));
+	mmoLog.Lines.Add('  CRC16 - 2 ["123456789123456789123456789"] = ' + IntToHex(wCrc16, 4));
+end;
 
 end.

@@ -55,6 +55,15 @@ object IndyTCPServerMainFormForm: TIndyTCPServerMainFormForm
       TabOrder = 1
       OnClick = btnStopClick
     end
+    object btnCrc16CCITT: TButton
+      Left = 280
+      Top = 8
+      Width = 121
+      Height = 25
+      Caption = 'btnCrc16CCITT'
+      TabOrder = 2
+      OnClick = btnCrc16CCITTClick
+    end
   end
   object IdTCPServer: TIdTCPServer
     OnStatus = IdTCPServerStatus
