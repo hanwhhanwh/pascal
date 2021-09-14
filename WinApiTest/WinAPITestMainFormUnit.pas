@@ -13,7 +13,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, StdCtrls, ComCtrls;
+  Dialogs, ExtCtrls, StdCtrls, ComCtrls, Spin;
 
 type
   TWinAPITestMainForm = class(TForm)
@@ -29,8 +29,17 @@ type
     edtClassName: TEdit;
     edtCaption: TEdit;
     spl1: TSplitter;
+    tsMouse: TTabSheet;
+    lbl1: TLabel;
+    edtMouseHandle: TEdit;
+    lbl2: TLabel;
+    lbl3: TLabel;
+    btnMouseClick: TButton;
+    seMouseX: TSpinEdit;
+    seMouseY: TSpinEdit;
     procedure btnFindWindowClick(Sender: TObject);
     procedure btnFindWindowExClick(Sender: TObject);
+    procedure btnMouseClickClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -46,7 +55,7 @@ implementation
 
 procedure TWinAPITestMainForm.btnFindWindowClick(Sender: TObject);
 var
-	hwnd: THandle;
+	hwndParent, hwndNext, hwnd: THandle;
   strClassName, strCaption: string;
   pClassName, pCaption: PChar;
 begin
@@ -62,8 +71,11 @@ begin
     pCaption := PChar(strCaption);
 
 	// 클래스 이름으로 메모장 핸들 찾기
-	hwnd := FindWindow(pClassName, pCaption);
+	hwndParent := FindWindow(pClassName, pCaption);
+	hwndNext := FindWindowEx(hwndParent, 0, 'Qt5QWindowIcon', 'Nox');
+	hwnd := FindWindowEx(hwndParent, hwndNext, 'Qt5QWindowIcon', 'Nox');
   edtFindWindowHandle.Text := IntToStr(hwnd) + ' = $' + IntToHex(hwnd, 8);
+  edtMouseHandle.Text := IntToStr(hwnd);
 end;
 
 procedure TWinAPITestMainForm.btnFindWindowExClick(Sender: TObject);
@@ -81,7 +93,28 @@ begin
     SetLength(strCaption, GetWindowTextLength(hwnd) + 1);
     GetWindowText(hwnd, @strCaption[1], Length(strCaption));
     mmoLog.Lines.Add('Hwnd = ' + Format('%x', [hwnd]) + ' , Caption = ' + strCaption);
+	  edtMouseHandle.Text := IntToStr(hwnd);
   until hwnd = 0;
+end;
+
+
+procedure TWinAPITestMainForm.btnMouseClickClick(Sender: TObject);
+var
+  hwnd: THandle;
+  lParam: Cardinal;
+begin
+  hwnd := StrToIntDef(edtMouseHandle.Text, 0);
+  if (hwnd = 0) then
+  begin
+    edtMouseHandle.SelectAll;
+    edtMouseHandle.SetFocus;
+  	exit;
+  end;
+
+  lParam := (seMouseY.Value shl 16) or (seMouseX.Value);
+	PostMessage(hwnd, WM_LBUTTONDOWN, 1, lParam);
+	PostMessage(hwnd, WM_MOUSEMOVE,   1, lParam);
+	PostMessage(hwnd, WM_LBUTTONUP,   0, lParam);
 end;
 
 end.
